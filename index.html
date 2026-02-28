@@ -5,650 +5,134 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Kid Tick - My Routine</title>
-  <style>
-    /* ── Reset & Base ─────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #FFF8F0;
-      --card-bg: #FFFFFF;
-      --primary: #6C63FF;
-      --primary-light: #A5A0FF;
-      --accent-yellow: #FFD93D;
-      --accent-green: #6BCB77;
-      --accent-pink: #FF6B9D;
-      --accent-blue: #4FC3F7;
-      --accent-orange: #FFB347;
-      --text: #3D3D3D;
-      --text-light: #8E8E8E;
-      --done-bg: #F0FFF0;
-      --shadow: 0 4px 16px rgba(0,0,0,0.08);
-      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
-      --radius: 20px;
-      --radius-sm: 14px;
-      --tap-min: 56px;
-      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    }
-
-    html { font-size: 18px; -webkit-tap-highlight-color: transparent; }
-
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100dvh;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── App Shell ─────────────────────────────────── */
-    .app {
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 16px 16px 100px;
-    }
-
-    /* ── Header ────────────────────────────────────── */
-    .header {
-      text-align: center;
-      padding: 24px 0 8px;
-    }
-
-    .header h1 {
-      font-size: 1.8rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, var(--primary), var(--accent-pink));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .header .greeting {
-      font-size: 1rem;
-      color: var(--text-light);
-      margin-top: 4px;
-    }
-
-    /* ── Progress Ring ─────────────────────────────── */
-    .progress-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 20px 0 24px;
-    }
-
-    .progress-ring-wrap {
-      position: relative;
-      width: 130px;
-      height: 130px;
-    }
-
-    .progress-ring {
-      transform: rotate(-90deg);
-      width: 130px;
-      height: 130px;
-    }
-
-    .progress-ring__bg {
-      fill: none;
-      stroke: #EDE9FE;
-      stroke-width: 10;
-    }
-
-    .progress-ring__fill {
-      fill: none;
-      stroke: url(#progressGradient);
-      stroke-width: 10;
-      stroke-linecap: round;
-      transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .progress-center {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .progress-stars {
-      font-size: 1.6rem;
-      line-height: 1;
-    }
-
-    .progress-label {
-      font-size: 0.75rem;
-      color: var(--text-light);
-      margin-top: 2px;
-      font-weight: 600;
-    }
-
-    .progress-text {
-      font-size: 0.85rem;
-      color: var(--text-light);
-      margin-top: 10px;
-      font-weight: 600;
-      text-align: center;
-    }
-
-    /* ── Celebration Banner ────────────────────────── */
-    .celebration {
-      display: none;
-      text-align: center;
-      padding: 20px;
-      margin-bottom: 20px;
-      background: linear-gradient(135deg, #FFF3CD, #FCE4EC, #E8F5E9);
-      border-radius: var(--radius);
-      animation: celebPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .celebration.show { display: block; }
-
-    .celebration .big-emoji { font-size: 3rem; }
-    .celebration .msg {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-top: 8px;
-    }
-
-    @keyframes celebPop {
-      0% { transform: scale(0.5); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    /* ── Routine Tabs ─────────────────────────────── */
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 18px;
-    }
-
-    .tab-btn {
-      flex: 1;
-      min-height: var(--tap-min);
-      border: none;
-      border-radius: var(--radius-sm);
-      background: var(--card-bg);
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--text-light);
-      cursor: pointer;
-      box-shadow: var(--shadow);
-      transition: all 0.25s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      font-family: var(--font);
-    }
-
-    .tab-btn.active {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 4px 20px rgba(108, 99, 255, 0.35);
-    }
-
-    .tab-btn:not(.active):active {
-      transform: scale(0.96);
-    }
-
-    /* ── Checklist Cards ──────────────────────────── */
-    .routine-section { display: none; }
-    .routine-section.active { display: block; }
-
-    .task-card {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      margin-bottom: 12px;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.35s ease;
-      -webkit-user-select: none;
-      user-select: none;
-      min-height: var(--tap-min);
-    }
-
-    .task-card:active {
-      transform: scale(0.97);
-    }
-
-    .task-card.done {
-      background: var(--done-bg);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-
-    .task-card.done .task-text {
-      text-decoration: line-through;
-      color: var(--text-light);
-    }
-
-    .task-card.done .task-check {
-      background: var(--accent-green);
-      border-color: var(--accent-green);
-    }
-
-    .task-card.done .task-check::after {
-      opacity: 1;
-      transform: scale(1) rotate(45deg);
-    }
-
-    .task-card.pop {
-      animation: cardPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    @keyframes cardPop {
-      0% { transform: scale(1); }
-      40% { transform: scale(1.04); }
-      100% { transform: scale(1); }
-    }
-
-    .task-emoji {
-      font-size: 1.7rem;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      background: #F5F3FF;
-      border-radius: 14px;
-    }
-
-    .task-card.done .task-emoji {
-      background: #E8F5E9;
-    }
-
-    .task-text {
-      flex: 1;
-      font-size: 1.05rem;
-      font-weight: 600;
-      transition: color 0.3s;
-      line-height: 1.3;
-    }
-
-    .task-check {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 3px solid #D4D0F7;
-      flex-shrink: 0;
-      position: relative;
-      transition: background 0.25s, border-color 0.25s;
-    }
-
-    .task-check::after {
-      content: '';
-      position: absolute;
-      left: 11px;
-      top: 5px;
-      width: 8px;
-      height: 15px;
-      border: solid #fff;
-      border-width: 0 3px 3px 0;
-      opacity: 0;
-      transform: scale(0.5) rotate(45deg);
-      transition: opacity 0.2s, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    /* ── Star burst particles ─────────────────────── */
-    .star-burst {
-      position: fixed;
-      pointer-events: none;
-      z-index: 1000;
-    }
-
-    .star-particle {
-      position: absolute;
-      font-size: 1.3rem;
-      animation: starFly 0.7s ease-out forwards;
-    }
-
-    @keyframes starFly {
-      0% { opacity: 1; transform: translate(0, 0) scale(1); }
-      100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.3); }
-    }
-
-    /* ── Reset Button ─────────────────────────────── */
-    .reset-wrap {
-      text-align: center;
-      margin-top: 32px;
-    }
-
-    .reset-btn {
-      min-height: var(--tap-min);
-      padding: 0 32px;
-      border: none;
-      border-radius: var(--radius-sm);
-      background: #FFF0F0;
-      color: var(--accent-pink);
-      font-size: 0.9rem;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: var(--font);
-      transition: transform 0.2s, background 0.2s;
-    }
-
-    .reset-btn:active { transform: scale(0.95); background: #FFE0E8; }
-
-    /* ── Confetti Canvas ──────────────────────────── */
-    #confetti-canvas {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 999;
-    }
-
-    /* ── Responsive tweaks ────────────────────────── */
-    @media (min-width: 600px) {
-      html { font-size: 20px; }
-      .app { padding: 24px 24px 100px; }
-      .header h1 { font-size: 2.2rem; }
-      .progress-ring-wrap { width: 150px; height: 150px; }
-      .progress-ring { width: 150px; height: 150px; }
-    }
-
-    @media (min-width: 900px) {
-      .app { max-width: 600px; }
-    }
-  </style>
+  <title>Kid Tick — My Routine</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
 <canvas id="confetti-canvas"></canvas>
 
+<!-- Timer overlay -->
+<div class="timer-overlay" id="timer-overlay"></div>
+
+<!-- Modal overlay (edit profile, etc.) -->
+<div class="modal-overlay" id="modal-overlay"></div>
+
 <div class="app">
 
-  <!-- Header -->
-  <header class="header">
-    <h1>Kid Tick</h1>
-    <p class="greeting" id="greeting"></p>
-  </header>
+  <!-- ════════ WELCOME VIEW ════════ -->
+  <div class="view" id="view-welcome">
+    <header class="header">
+      <h1>Kid Tick</h1>
+    </header>
+    <div class="view-content"></div>
+  </div>
 
-  <!-- Progress Ring -->
-  <div class="progress-area">
-    <div class="progress-ring-wrap">
-      <svg class="progress-ring" viewBox="0 0 130 130">
-        <defs>
-          <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#6C63FF"/>
-            <stop offset="100%" stop-color="#FF6B9D"/>
-          </linearGradient>
-        </defs>
-        <circle class="progress-ring__bg" cx="65" cy="65" r="54"/>
-        <circle class="progress-ring__fill" cx="65" cy="65" r="54"
-                stroke-dasharray="339.29" stroke-dashoffset="339.29"/>
-      </svg>
-      <div class="progress-center">
-        <span class="progress-stars" id="progress-stars"></span>
-        <span class="progress-label" id="progress-count"></span>
+  <!-- ════════ ROUTINE VIEW ════════ -->
+  <div class="view" id="view-routine">
+    <header class="header">
+      <h1>Kid Tick</h1>
+      <p class="greeting" id="greeting"></p>
+    </header>
+
+    <!-- Profile switcher -->
+    <div class="profile-switcher" id="profile-switcher"></div>
+
+    <!-- Streak -->
+    <div class="streak-banner hidden" id="streak-banner"></div>
+
+    <!-- Daily tip -->
+    <div class="daily-tip" id="daily-tip"></div>
+
+    <!-- Progress Ring -->
+    <div class="progress-area">
+      <div class="progress-ring-wrap">
+        <svg class="progress-ring" viewBox="0 0 130 130">
+          <defs>
+            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#6C63FF"/>
+              <stop offset="100%" stop-color="#FF6B9D"/>
+            </linearGradient>
+          </defs>
+          <circle class="progress-ring__bg" cx="65" cy="65" r="54"/>
+          <circle class="progress-ring__fill" cx="65" cy="65" r="54"
+                  stroke-dasharray="339.29" stroke-dashoffset="339.29"/>
+        </svg>
+        <div class="progress-center">
+          <span class="progress-stars" id="progress-stars"></span>
+          <span class="progress-label" id="progress-count"></span>
+        </div>
       </div>
+      <p class="progress-text" id="progress-text"></p>
     </div>
-    <p class="progress-text" id="progress-text"></p>
+
+    <!-- Celebration -->
+    <div class="celebration" id="celebration">
+      <div class="big-emoji">🎉🌟🎉</div>
+      <div class="msg">Amazing! All done!</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="morning">🌅 Morning</button>
+      <button class="tab-btn" data-tab="afternoon">☀️ Afternoon</button>
+      <button class="tab-btn" data-tab="evening">🌙 Evening</button>
+    </div>
+
+    <!-- Routine Sections -->
+    <div class="routine-section active" id="section-morning"></div>
+    <div class="routine-section" id="section-afternoon"></div>
+    <div class="routine-section" id="section-evening"></div>
+
+    <!-- Reset -->
+    <div class="reset-wrap">
+      <button class="reset-btn" id="reset-btn">Start Fresh 🔄</button>
+    </div>
   </div>
 
-  <!-- Celebration -->
-  <div class="celebration" id="celebration">
-    <div class="big-emoji">🎉🌟🎉</div>
-    <div class="msg">Amazing! All done!</div>
+  <!-- ════════ STICKERS VIEW ════════ -->
+  <div class="view" id="view-stickers">
+    <div class="view-content"></div>
   </div>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="morning">🌅 Morning</button>
-    <button class="tab-btn" data-tab="afternoon">☀️ Afternoon</button>
-    <button class="tab-btn" data-tab="evening">🌙 Evening</button>
+  <!-- ════════ WEEKLY VIEW ════════ -->
+  <div class="view" id="view-weekly">
+    <div class="view-content"></div>
   </div>
 
-  <!-- Morning Routine -->
-  <div class="routine-section active" id="section-morning"></div>
-
-  <!-- Afternoon Routine -->
-  <div class="routine-section" id="section-afternoon"></div>
-
-  <!-- Evening Routine -->
-  <div class="routine-section" id="section-evening"></div>
-
-  <!-- Reset -->
-  <div class="reset-wrap">
-    <button class="reset-btn" id="reset-btn">Start Fresh 🔄</button>
+  <!-- ════════ SETTINGS VIEW ════════ -->
+  <div class="view" id="view-settings">
+    <div class="view-content"></div>
   </div>
 
 </div>
 
-<script>
-(function () {
-  'use strict';
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-view="routine">
+    <span class="nav-icon">🏠</span>
+    <span>Home</span>
+  </button>
+  <button class="nav-btn" data-view="stickers">
+    <span class="nav-icon">⭐</span>
+    <span>Stickers</span>
+  </button>
+  <button class="nav-btn" data-view="weekly">
+    <span class="nav-icon">📅</span>
+    <span>Week</span>
+  </button>
+  <button class="nav-btn" data-view="settings">
+    <span class="nav-icon">⚙️</span>
+    <span>Settings</span>
+  </button>
+</nav>
 
-  /* ── Routine Data ─────────────────────────────── */
-  const routines = {
-    morning: [
-      { id: 'm1', emoji: '🛏️', text: 'Make my bed' },
-      { id: 'm2', emoji: '🪥', text: 'Brush my teeth' },
-      { id: 'm3', emoji: '😊', text: 'Wash my face' },
-      { id: 'm4', emoji: '👕', text: 'Get dressed' },
-      { id: 'm5', emoji: '🥣', text: 'Eat breakfast' },
-      { id: 'm6', emoji: '🎒', text: 'Pack my bag' },
-    ],
-    afternoon: [
-      { id: 'a1', emoji: '🍎', text: 'Eat a healthy snack' },
-      { id: 'a2', emoji: '📚', text: 'Do my homework' },
-      { id: 'a3', emoji: '🧹', text: 'Tidy my space' },
-      { id: 'a4', emoji: '🚴', text: 'Play outside or exercise' },
-      { id: 'a5', emoji: '📖', text: 'Read for 15 minutes' },
-    ],
-    evening: [
-      { id: 'e1', emoji: '🍽️', text: 'Help with dinner' },
-      { id: 'e2', emoji: '🛁', text: 'Take a bath or shower' },
-      { id: 'e3', emoji: '🪥', text: 'Brush my teeth' },
-      { id: 'e4', emoji: '👔', text: 'Put on pyjamas' },
-      { id: 'e5', emoji: '📖', text: 'Storytime' },
-      { id: 'e6', emoji: '😴', text: 'Lights out — goodnight!' },
-    ],
-  };
-
-  const allTasks = [...routines.morning, ...routines.afternoon, ...routines.evening];
-  const state = {};
-  allTasks.forEach(t => (state[t.id] = false));
-
-  /* ── DOM refs ─────────────────────────────────── */
-  const $greeting     = document.getElementById('greeting');
-  const $progressFill = document.querySelector('.progress-ring__fill');
-  const $starsEl      = document.getElementById('progress-stars');
-  const $countEl      = document.getElementById('progress-count');
-  const $textEl       = document.getElementById('progress-text');
-  const $celebration  = document.getElementById('celebration');
-  const $resetBtn     = document.getElementById('reset-btn');
-  const $canvas       = document.getElementById('confetti-canvas');
-  const ctx           = $canvas.getContext('2d');
-
-  const CIRCUMFERENCE = 2 * Math.PI * 54; // r=54
-
-  /* ── Greeting ─────────────────────────────────── */
-  function setGreeting() {
-    const h = new Date().getHours();
-    if (h < 12)      $greeting.textContent = 'Good morning, superstar!';
-    else if (h < 17) $greeting.textContent = 'Good afternoon, champ!';
-    else             $greeting.textContent = 'Good evening, sleepyhead!';
-  }
-  setGreeting();
-
-  /* ── Render Cards ─────────────────────────────── */
-  function renderSection(key) {
-    const section = document.getElementById('section-' + key);
-    section.innerHTML = '';
-    routines[key].forEach(task => {
-      const card = document.createElement('div');
-      card.className = 'task-card' + (state[task.id] ? ' done' : '');
-      card.setAttribute('role', 'checkbox');
-      card.setAttribute('aria-checked', state[task.id]);
-      card.setAttribute('tabindex', '0');
-      card.dataset.id = task.id;
-      card.innerHTML =
-        '<span class="task-emoji">' + task.emoji + '</span>' +
-        '<span class="task-text">' + task.text + '</span>' +
-        '<span class="task-check"></span>';
-      card.addEventListener('click', () => toggle(task.id, card));
-      card.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(task.id, card); }
-      });
-      section.appendChild(card);
-    });
-  }
-  Object.keys(routines).forEach(renderSection);
-
-  /* ── Tabs ──────────────────────────────────────── */
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.routine-section').forEach(s => s.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('section-' + btn.dataset.tab).classList.add('active');
-    });
-  });
-
-  /* ── Toggle Task ──────────────────────────────── */
-  function toggle(id, card) {
-    state[id] = !state[id];
-    card.classList.toggle('done', state[id]);
-    card.setAttribute('aria-checked', state[id]);
-
-    // Pop animation
-    card.classList.remove('pop');
-    void card.offsetWidth; // reflow
-    card.classList.add('pop');
-
-    if (state[id]) {
-      burstStars(card);
-    }
-
-    updateProgress();
-  }
-
-  /* ── Progress ─────────────────────────────────── */
-  function updateProgress() {
-    const total = allTasks.length;
-    const done  = allTasks.filter(t => state[t.id]).length;
-    const pct   = done / total;
-
-    // Ring
-    const offset = CIRCUMFERENCE * (1 - pct);
-    $progressFill.style.strokeDashoffset = offset;
-
-    // Stars (up to 5)
-    const filledStars = Math.round(pct * 5);
-    $starsEl.textContent = '⭐'.repeat(filledStars) + '☆'.repeat(5 - filledStars);
-
-    // Count
-    $countEl.textContent = done + ' / ' + total;
-
-    // Motivational text
-    if (done === 0)          $textEl.textContent = 'Let\'s get started!';
-    else if (pct < 0.25)     $textEl.textContent = 'Great start — keep going!';
-    else if (pct < 0.5)      $textEl.textContent = 'You\'re doing awesome!';
-    else if (pct < 0.75)     $textEl.textContent = 'More than halfway — wow!';
-    else if (pct < 1)        $textEl.textContent = 'Almost there, superstar!';
-    else                     $textEl.textContent = 'You did it! 🏆';
-
-    // Celebration
-    if (done === total) {
-      $celebration.classList.add('show');
-      launchConfetti();
-    } else {
-      $celebration.classList.remove('show');
-    }
-  }
-  updateProgress();
-
-  /* ── Star Burst ───────────────────────────────── */
-  function burstStars(card) {
-    const rect = card.getBoundingClientRect();
-    const cx = rect.right - 30;
-    const cy = rect.top + rect.height / 2;
-
-    const burst = document.createElement('div');
-    burst.className = 'star-burst';
-    burst.style.left = cx + 'px';
-    burst.style.top  = cy + 'px';
-
-    const symbols = ['⭐', '✨', '🌟'];
-    for (let i = 0; i < 6; i++) {
-      const p = document.createElement('span');
-      p.className = 'star-particle';
-      p.textContent = symbols[i % symbols.length];
-      const angle = (Math.PI * 2 * i) / 6;
-      const dist = 40 + Math.random() * 30;
-      p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
-      p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
-      burst.appendChild(p);
-    }
-
-    document.body.appendChild(burst);
-    setTimeout(() => burst.remove(), 800);
-  }
-
-  /* ── Confetti ─────────────────────────────────── */
-  function launchConfetti() {
-    $canvas.width  = window.innerWidth;
-    $canvas.height = window.innerHeight;
-
-    const pieces = [];
-    const colors = ['#6C63FF','#FF6B9D','#FFD93D','#6BCB77','#4FC3F7','#FFB347'];
-
-    for (let i = 0; i < 120; i++) {
-      pieces.push({
-        x: Math.random() * $canvas.width,
-        y: -20 - Math.random() * 200,
-        w: 6 + Math.random() * 6,
-        h: 10 + Math.random() * 8,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        vy: 2 + Math.random() * 4,
-        vx: -1.5 + Math.random() * 3,
-        rot: Math.random() * 360,
-        rv: -3 + Math.random() * 6,
-      });
-    }
-
-    let frame = 0;
-    function draw() {
-      ctx.clearRect(0, 0, $canvas.width, $canvas.height);
-      let alive = false;
-      pieces.forEach(p => {
-        if (p.y > $canvas.height + 20) return;
-        alive = true;
-        p.x   += p.vx;
-        p.y   += p.vy;
-        p.vy  += 0.08;
-        p.rot += p.rv;
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate((p.rot * Math.PI) / 180);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-        ctx.restore();
-      });
-      frame++;
-      if (alive && frame < 300) requestAnimationFrame(draw);
-      else ctx.clearRect(0, 0, $canvas.width, $canvas.height);
-    }
-    requestAnimationFrame(draw);
-  }
-
-  /* ── Reset ────────────────────────────────────── */
-  $resetBtn.addEventListener('click', () => {
-    allTasks.forEach(t => (state[t.id] = false));
-    Object.keys(routines).forEach(renderSection);
-    updateProgress();
-  });
-
-})();
-</script>
+<!-- Scripts (order matters: data → store → effects → render → app) -->
+<script src="js/routines.js"></script>
+<script src="js/store.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/render.js"></script>
+<script src="js/app.js"></script>
 
 </body>
 </html>
