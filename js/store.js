@@ -38,6 +38,7 @@ var Store = (function () {
       stickers: {},   // { profileId: [ { emoji, type, date } ] }
       customTasks: {},// { profileId: { morning:[], afternoon:[], evening:[] } }
       theme: 'default',
+      language: 'en', // 'en' | 'es' | 'ca'
     };
   }
 
@@ -265,6 +266,14 @@ var Store = (function () {
     save();
   }
 
+  /* ── Language ─────────────────────────────────────── */
+  function getLanguage() { return _data.language || 'en'; }
+
+  function setLanguage(lang) {
+    _data.language = lang;
+    save();
+  }
+
   /* ── Full reset ─────────────────────────────────── */
   function resetAll() {
     _data = defaultData();
@@ -276,7 +285,8 @@ var Store = (function () {
 
   /* ── Build the effective task list (base + custom) ── */
   function getEffectiveTasks(profileId, age) {
-    var base = ROUTINES.forAge(age);
+    var ageKey = age === 'adult' ? 'adult' : age;
+    var base = ROUTINES.forAge(ageKey);
     var custom = getCustomTasks(profileId);
     return {
       morning:   base.morning.concat(custom.morning),
@@ -327,6 +337,10 @@ var Store = (function () {
     // Theme
     getTheme: getTheme,
     setTheme: setTheme,
+
+    // Language
+    getLanguage: getLanguage,
+    setLanguage: setLanguage,
 
     // Effective tasks
     getEffectiveTasks: getEffectiveTasks,

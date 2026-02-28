@@ -1,7 +1,7 @@
 /* ================================================================
    Kid Tick — App  (main orchestration & routing)
    ================================================================
-   Depends on: ROUTINES, Store, Effects, Render
+   Depends on: ROUTINES, Store, Effects, Render, I18n
    ================================================================ */
 
 (function () {
@@ -41,7 +41,6 @@
     } else {
       document.documentElement.setAttribute('data-theme', themeId);
     }
-    // Update gradient stops in SVG to match theme (requestAnimationFrame so CSS vars have applied)
     requestAnimationFrame(function () {
       var primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
       var pink = getComputedStyle(document.documentElement).getPropertyValue('--accent-pink').trim();
@@ -50,6 +49,28 @@
       if (stop0 && primary) stop0.setAttribute('stop-color', primary);
       if (stop1 && pink) stop1.setAttribute('stop-color', pink);
     });
+  }
+
+  /* ── Apply language ─────────────────────────────── */
+  function applyLanguage(lang) {
+    I18n.setLang(lang);
+    Store.setLanguage(lang);
+    document.documentElement.lang = lang;
+
+    // Update all translatable labels
+    Render.updateNavLabels();
+    Render.updateTabLabels();
+
+    // Update reset button
+    var resetBtn = document.getElementById('reset-btn');
+    if (resetBtn) resetBtn.textContent = I18n.t('reset.btn');
+
+    // Re-render current view
+    var profile = Store.getActiveProfile();
+    if (profile) {
+      renderRoutineView();
+      if (currentView !== 'routine') showView(currentView);
+    }
   }
 
   /* ── Navigation ─────────────────────────────────── */
@@ -211,8 +232,10 @@
     var age = profile.age;
     var routines = Store.getEffectiveTasks(profile.id, age);
 
-    // Age-based card sizing
-    $app.classList.toggle('age-young', age <= 2);
+    // Age-based card sizing (young kids get bigger cards)
+    $app.classList.toggle('age-young', age !== 'adult' && age <= 2);
+    // Adult styling
+    $app.classList.toggle('adult-mode', age === 'adult');
 
     Render.renderGreeting($greeting, profile);
     Render.renderProfileSwitcher($profileBar, handleProfileSwitch, handleAddProfile);
@@ -223,13 +246,13 @@
     Render.renderSection($sectionEvening, routines.evening, profile, handleToggle, handleTimerTask);
     Render.renderProgress(profile);
     Render.renderTabBadges(profile);
+    Render.updateTabLabels();
   }
 
   /* ── Profile switching ──────────────────────────── */
   function handleProfileSwitch(id) {
     Store.setActiveProfile(id);
     renderRoutineView();
-    // If we're on a non-routine view, refresh it too
     if (currentView !== 'routine') showView(currentView);
   }
 
@@ -247,7 +270,14 @@
     onThemeChange: function (themeId) {
       Store.setTheme(themeId);
       applyTheme(themeId);
-      // Re-render settings to update selection
+      var profile = Store.getActiveProfile();
+      if (profile) {
+        Render.renderSettings($settingsView.querySelector('.view-content'), profile, settingsCallbacks);
+      }
+    },
+    onLanguageChange: function (lang) {
+      applyLanguage(lang);
+      // Re-render settings in the new language
       var profile = Store.getActiveProfile();
       if (profile) {
         Render.renderSettings($settingsView.querySelector('.view-content'), profile, settingsCallbacks);
@@ -297,6 +327,7 @@
   function setupResetBtn() {
     var btn = document.getElementById('reset-btn');
     if (btn) {
+      btn.textContent = I18n.t('reset.btn');
       btn.addEventListener('click', function () {
         var profile = Store.getActiveProfile();
         if (profile) {
@@ -309,14 +340,22 @@
 
   /* ── Boot ───────────────────────────────────────── */
   function boot() {
+    // Initialize language from store
+    var savedLang = Store.getLanguage();
+    I18n.setLang(savedLang);
+    document.documentElement.lang = savedLang;
+
     applyTheme(Store.getTheme());
     setupNav();
     setupTabs();
     setupResetBtn();
 
+    // Update all translatable static labels
+    Render.updateNavLabels();
+    Render.updateTabLabels();
+
     var profiles = Store.getProfiles();
     if (profiles.length === 0) {
-      // Show welcome / setup
       showView('welcome');
       Render.renderWelcome($welcomeView.querySelector('.view-content'), function (name, age, avatar) {
         Store.addProfile(name, age, avatar);
@@ -325,7 +364,6 @@
         renderRoutineView();
       });
     } else {
-      // Go straight to routines
       showView('routine');
       autoSelectTab();
       renderRoutineView();

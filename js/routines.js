@@ -148,11 +148,48 @@ var ROUTINES = (function () {
     ],
   };
 
+  /* ── Adult / Parent ───────────────────────────────── */
+  var adult = {
+    morning: [
+      { id: 'am1', emoji: '🌅', text: 'Wake up & stretch' },
+      { id: 'am2', emoji: '🚿', text: 'Shower & get ready' },
+      { id: 'am3', emoji: '🍳', text: 'Prepare breakfast' },
+      { id: 'am4', emoji: '🥪', text: "Pack kids' lunches" },
+      { id: 'am5', emoji: '📅', text: 'Check family calendar' },
+      { id: 'am6', emoji: '🏃', text: 'Morning exercise' },
+      { id: 'am7', emoji: '💼', text: 'Start work' },
+    ],
+    afternoon: [
+      { id: 'aa1', emoji: '🍽️', text: 'Lunch break' },
+      { id: 'aa2', emoji: '📱', text: 'Check school messages' },
+      { id: 'aa3', emoji: '🍲', text: 'Plan dinner' },
+      { id: 'aa4', emoji: '🧹', text: 'Quick household task' },
+      { id: 'aa5', emoji: '🚶', text: 'Personal time / walk' },
+      { id: 'aa6', emoji: '🛒', text: 'Grocery run if needed' },
+    ],
+    evening: [
+      { id: 'ae1', emoji: '👨‍🍳', text: 'Cook dinner' },
+      { id: 'ae2', emoji: '🧽', text: 'Clean up kitchen' },
+      { id: 'ae3', emoji: '📚', text: 'Help with homework' },
+      { id: 'ae4', emoji: '👔', text: 'Prep for tomorrow' },
+      { id: 'ae5', emoji: '🧘', text: 'Self-care time' },
+      { id: 'ae6', emoji: '📋', text: "Review tomorrow's schedule" },
+      { id: 'ae7', emoji: '😴', text: 'Bedtime wind-down' },
+    ],
+  };
+
   /* ── Lookup ────────────────────────────────────── */
-  var byAge = { 1: age1, 2: age2, 3: age3, 4: age4, 5: age5 };
+  var byAge = { 1: age1, 2: age2, 3: age3, 4: age4, 5: age5, adult: adult };
 
   /* ── Avatars for profile selection ──────────────── */
-  var AVATARS = ['🦄','🦊','🐼','🦁','🐸','🐱','🐶','🦋','🐙','🦖','🐧','🐰'];
+  /* 🐦 = Hummingbird, 🦌 = Fawn — featured first for the kids */
+  var AVATARS = ['🐦','🦌','🦄','🦊','🐼','🦁','🐸','🐱','🐶','🦋','🐙','🦖','🐧','🐰'];
+
+  /* ── Labels for featured avatars ──────────────────── */
+  var AVATAR_LABELS = {
+    '🐦': 'avatar.hummingbird',
+    '🦌': 'avatar.fawn',
+  };
 
   /* ── Sticker pools (earned as rewards) ──────────── */
   var STICKER_POOLS = {
@@ -162,13 +199,14 @@ var ROUTINES = (function () {
     allDay:    ['🏆','👑','💎','🎖️','🥇','🎯','💪','🦸'],
   };
 
-  /* ── Age labels ─────────────────────────────────── */
+  /* ── Age labels (keys for i18n lookup) ─────────── */
   var AGE_LABELS = {
     1: 'Baby',
     2: 'Toddler',
     3: 'Pre-school',
     4: 'Pre-K',
     5: 'School',
+    adult: 'Adult',
   };
 
   /* ── Tips (per age) ─────────────────────────────── */
@@ -208,6 +246,13 @@ var ROUTINES = (function () {
       'Exercise before dinner helps you sleep better.',
       'A tidy space means a tidy mind!',
     ],
+    adult: [
+      'A consistent morning routine sets the tone for the whole day.',
+      'Planning meals ahead saves time and reduces stress.',
+      'Taking short breaks improves productivity.',
+      "Don't forget to take care of yourself too!",
+      'A family calendar keeps everyone on the same page.',
+    ],
   };
 
   /* ── Motivational messages ──────────────────────── */
@@ -240,6 +285,7 @@ var ROUTINES = (function () {
       return r.morning.concat(r.afternoon, r.evening);
     },
     AVATARS: AVATARS,
+    AVATAR_LABELS: AVATAR_LABELS,
     STICKER_POOLS: STICKER_POOLS,
     AGE_LABELS: AGE_LABELS,
     TIPS: TIPS,
