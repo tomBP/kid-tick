@@ -1,7 +1,7 @@
 /* ================================================================
    Kid Tick — App  (main orchestration & routing)
    ================================================================
-   Depends on: ROUTINES, Store, Effects, Render
+   Depends on: ROUTINES, Store, Effects, Render, I18n
    ================================================================ */
 
 (function () {
@@ -41,7 +41,6 @@
     } else {
       document.documentElement.setAttribute('data-theme', themeId);
     }
-    // Update gradient stops in SVG to match theme (requestAnimationFrame so CSS vars have applied)
     requestAnimationFrame(function () {
       var primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
       var pink = getComputedStyle(document.documentElement).getPropertyValue('--accent-pink').trim();
@@ -135,7 +134,6 @@
     card.classList.toggle('done', newState);
     card.setAttribute('aria-checked', String(newState));
 
-    // Pop animation
     card.classList.remove('pop');
     void card.offsetWidth;
     card.classList.add('pop');
@@ -151,10 +149,8 @@
     Render.renderTabBadges(profile);
     Render.renderStreak($streakBanner, profile);
 
-    // Check for section completion → award sticker
     checkAndAwardStickers(profile);
 
-    // All done?
     if (result.done === result.total && result.total > 0) {
       Effects.soundAllDone();
       Effects.launchConfetti();
@@ -166,12 +162,8 @@
     Render.renderTimerOverlay(
       $timerOverlay,
       task,
-      function () { // onComplete
-        handleToggle(task, card);
-      },
-      function () { // onSkip
-        handleToggle(task, card);
-      }
+      function () { handleToggle(task, card); },
+      function () { handleToggle(task, card); }
     );
   }
 
@@ -195,7 +187,6 @@
       if (!comp.complete) allSectionsDone = false;
     });
 
-    // Full day sticker
     if (allSectionsDone && !Store.hasStickerForSection(profile.id, 'allDay')) {
       var pool = ROUTINES.STICKER_POOLS.allDay;
       var emoji = pool[Math.floor(Math.random() * pool.length)];
@@ -211,8 +202,9 @@
     var age = profile.age;
     var routines = Store.getEffectiveTasks(profile.id, age);
 
-    // Age-based card sizing
-    $app.classList.toggle('age-young', age <= 2);
+    // Age-based card sizing (young kids get bigger cards)
+    var isYoung = (typeof age === 'number' && age <= 2);
+    $app.classList.toggle('age-young', isYoung);
 
     Render.renderGreeting($greeting, profile);
     Render.renderProfileSwitcher($profileBar, handleProfileSwitch, handleAddProfile);
@@ -223,13 +215,13 @@
     Render.renderSection($sectionEvening, routines.evening, profile, handleToggle, handleTimerTask);
     Render.renderProgress(profile);
     Render.renderTabBadges(profile);
+    Render.updateTabLabels();
   }
 
   /* ── Profile switching ──────────────────────────── */
   function handleProfileSwitch(id) {
     Store.setActiveProfile(id);
     renderRoutineView();
-    // If we're on a non-routine view, refresh it too
     if (currentView !== 'routine') showView(currentView);
   }
 
@@ -242,15 +234,32 @@
     });
   }
 
+  /* ── Refresh all translated labels ──────────────── */
+  function refreshLabels() {
+    Render.updateNavLabels();
+    Render.updateTabLabels();
+    // Update reset button text
+    var resetBtn = document.getElementById('reset-btn');
+    if (resetBtn) resetBtn.textContent = I18n.t('reset.btn') + ' 🔄';
+  }
+
   /* ── Settings callbacks ─────────────────────────── */
   var settingsCallbacks = {
     onThemeChange: function (themeId) {
       Store.setTheme(themeId);
       applyTheme(themeId);
-      // Re-render settings to update selection
       var profile = Store.getActiveProfile();
       if (profile) {
         Render.renderSettings($settingsView.querySelector('.view-content'), profile, settingsCallbacks);
+      }
+    },
+    onLanguageChange: function (langCode) {
+      I18n.setLang(langCode);
+      refreshLabels();
+      var profile = Store.getActiveProfile();
+      if (profile) {
+        Render.renderSettings($settingsView.querySelector('.view-content'), profile, settingsCallbacks);
+        renderRoutineView();
       }
     },
     onResetDay: function () {
@@ -313,10 +322,10 @@
     setupNav();
     setupTabs();
     setupResetBtn();
+    refreshLabels();
 
     var profiles = Store.getProfiles();
     if (profiles.length === 0) {
-      // Show welcome / setup
       showView('welcome');
       Render.renderWelcome($welcomeView.querySelector('.view-content'), function (name, age, avatar) {
         Store.addProfile(name, age, avatar);
@@ -325,7 +334,6 @@
         renderRoutineView();
       });
     } else {
-      // Go straight to routines
       showView('routine');
       autoSelectTab();
       renderRoutineView();

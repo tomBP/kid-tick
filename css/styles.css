@@ -643,7 +643,7 @@ body {
 /* ── Age Picker ───────────────────────────────── */
 .age-picker {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
 
@@ -685,7 +685,7 @@ body {
 /* ── Avatar Picker ────────────────────────────── */
 .avatar-picker {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 10px;
 }
 
@@ -1214,13 +1214,86 @@ body {
 
 .fade-in { animation: fadeIn 0.3s ease; }
 
+/* ── Language Picker ──────────────────────────── */
+.lang-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.lang-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border: 2.5px solid #E5E5E5;
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font);
+}
+
+.lang-option:active { transform: scale(0.95); }
+
+.lang-option.selected {
+  border-color: var(--primary);
+  box-shadow: 0 2px 12px var(--primary-glow);
+}
+
+.lang-option .lang-flag { font-size: 1.6rem; line-height: 1; }
+
+.lang-option .lang-name {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ── SVG Avatars (hummingbird, fawn) ─────────── */
+.svg-avatar svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.avatar-option .svg-avatar {
+  width: 70%;
+  height: 70%;
+}
+
+.chip-avatar .svg-avatar {
+  width: 24px;
+  height: 24px;
+}
+
+.pe-avatar .svg-avatar {
+  width: 44px;
+  height: 44px;
+}
+
+/* ── Adult Profile Chip ──────────────────────── */
+.profile-chip.adult-chip {
+  background: linear-gradient(135deg, #F5F3FF, #FFF7ED);
+}
+
+.profile-chip.adult-chip.active {
+  background: var(--card-bg);
+}
+
+/* ── Adult age option ────────────────────────── */
+.age-option-adult .age-num {
+  font-size: 1.3rem;
+}
+
 /* ── Responsive ───────────────────────────────── */
 @media (min-width: 600px) {
   html { font-size: 20px; }
   .app { padding: 24px 24px 100px; }
   .header h1 { font-size: 2.2rem; }
   :root { --ring-size: 150px; }
-  .avatar-picker { grid-template-columns: repeat(6, 1fr); }
+  .avatar-picker { grid-template-columns: repeat(7, 1fr); }
   .sticker-grid { grid-template-columns: repeat(6, 1fr); }
 }
 

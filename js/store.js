@@ -223,7 +223,6 @@ var Store = (function () {
       var done = getCompletionCount(profileId, allTasks, ds);
       week.push({
         date: ds,
-        dayName: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i],
         dayNum: d.getDate(),
         done: done,
         total: allTasks.length,

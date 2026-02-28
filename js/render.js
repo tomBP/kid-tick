@@ -1,7 +1,7 @@
 /* ================================================================
    Kid Tick — Render  (DOM rendering for every view)
    ================================================================
-   Depends on: ROUTINES, Store, Effects
+   Depends on: ROUTINES, Store, Effects, I18n
    ================================================================ */
 
 /* eslint-disable no-unused-vars */
@@ -21,6 +21,16 @@ var Render = (function () {
     return e;
   }
 
+  /** Get translated text for a task */
+  function taskText(age, task) {
+    return I18n.task(age, task.id, task.text);
+  }
+
+  /** Get age label (translated) */
+  function ageLabel(age) {
+    return I18n.t('age.' + age);
+  }
+
   /* ──────────────────────────────────────────────────
      WELCOME / PROFILE SETUP VIEW
      ────────────────────────────────────────────────── */
@@ -29,48 +39,51 @@ var Render = (function () {
     var wrap = el('div', 'welcome-view fade-in');
 
     wrap.innerHTML =
-      '<h2>Welcome to Kid Tick!</h2>' +
-      '<p class="welcome-sub">Let\'s set up a profile for your little one</p>' +
+      '<h2>' + I18n.t('welcome.title') + '</h2>' +
+      '<p class="welcome-sub">' + I18n.t('welcome.sub') + '</p>' +
       '<div class="setup-section">' +
-        '<label>Child\'s name</label>' +
-        '<input class="setup-input" id="setup-name" type="text" placeholder="e.g. Emma" maxlength="20" autocomplete="off">' +
+        '<label>' + I18n.t('welcome.name') + '</label>' +
+        '<input class="setup-input" id="setup-name" type="text" placeholder="' + I18n.t('welcome.namePh') + '" maxlength="20" autocomplete="off">' +
       '</div>' +
       '<div class="setup-section">' +
-        '<label>Age</label>' +
+        '<label>' + I18n.t('welcome.age') + '</label>' +
         '<div class="age-picker" id="setup-age"></div>' +
       '</div>' +
       '<div class="setup-section">' +
-        '<label>Pick an avatar</label>' +
+        '<label>' + I18n.t('welcome.avatar') + '</label>' +
         '<div class="avatar-picker" id="setup-avatar"></div>' +
       '</div>' +
       '<div style="text-align:center;margin-top:24px">' +
-        '<button class="btn-primary" id="setup-save" disabled>Let\'s Go!</button>' +
+        '<button class="btn-primary" id="setup-save" disabled>' + I18n.t('welcome.go') + '</button>' +
       '</div>';
 
     container.appendChild(wrap);
 
-    // Age buttons
+    // Age buttons (1–5 + Adult)
     var agePicker = document.getElementById('setup-age');
     var selectedAge = null;
-    for (var a = 1; a <= 5; a++) {
-      (function (age) {
-        var btn = el('button', 'age-option');
-        btn.innerHTML = '<span class="age-num">' + age + '</span><span class="age-label">' + ROUTINES.AGE_LABELS[age] + '</span>';
-        btn.addEventListener('click', function () {
-          agePicker.querySelectorAll('.age-option').forEach(function (b) { b.classList.remove('selected'); });
-          btn.classList.add('selected');
-          selectedAge = age;
-          checkReady();
-        });
-        agePicker.appendChild(btn);
-      })(a);
-    }
+    var ages = [1, 2, 3, 4, 5, 'adult'];
+
+    ages.forEach(function (age) {
+      var btn = el('button', 'age-option' + (age === 'adult' ? ' age-option-adult' : ''));
+      var numDisplay = age === 'adult' ? '👤' : age;
+      btn.innerHTML = '<span class="age-num">' + numDisplay + '</span><span class="age-label">' + ageLabel(age) + '</span>';
+      btn.addEventListener('click', function () {
+        agePicker.querySelectorAll('.age-option').forEach(function (b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+        selectedAge = age;
+        checkReady();
+      });
+      agePicker.appendChild(btn);
+    });
 
     // Avatar buttons
     var avatarPicker = document.getElementById('setup-avatar');
     var selectedAvatar = null;
     ROUTINES.AVATARS.forEach(function (av) {
-      var btn = el('button', 'avatar-option', av);
+      var btn = el('button', 'avatar-option');
+      btn.innerHTML = ROUTINES.avatarPickerHTML(av);
+      btn.dataset.avatar = av;
       btn.addEventListener('click', function () {
         avatarPicker.querySelectorAll('.avatar-option').forEach(function (b) { b.classList.remove('selected'); });
         btn.classList.add('selected');
@@ -104,18 +117,19 @@ var Render = (function () {
     var activeId = Store.getActiveId();
 
     profiles.forEach(function (p) {
-      var chip = el('button', 'profile-chip' + (p.id === activeId ? ' active' : ''));
+      var chip = el('button', 'profile-chip' + (p.id === activeId ? ' active' : '') + (p.age === 'adult' ? ' adult-chip' : ''));
+      var ageDisplay = p.age === 'adult' ? ageLabel('adult') : p.age + 'y';
       chip.innerHTML =
-        '<span class="chip-avatar">' + p.avatar + '</span>' +
+        '<span class="chip-avatar">' + ROUTINES.avatarHTML(p.avatar, 24) + '</span>' +
         '<span>' + p.name + '</span>' +
-        '<span class="chip-age">' + p.age + 'y</span>';
+        '<span class="chip-age">' + ageDisplay + '</span>';
       chip.addEventListener('click', function () { onSwitch(p.id); });
       container.appendChild(chip);
     });
 
     if (profiles.length < 6) {
       var addBtn = el('button', 'add-profile-chip', '+');
-      addBtn.title = 'Add child';
+      addBtn.title = I18n.t('chip.add');
       addBtn.addEventListener('click', onAdd);
       container.appendChild(addBtn);
     }
@@ -129,9 +143,10 @@ var Render = (function () {
     var streak = Store.getStreak(profile.id, allTasks);
     if (streak > 0) {
       container.classList.remove('hidden');
+      var streakWord = streak > 1 ? I18n.t('streak.days') : I18n.t('streak.day');
       container.innerHTML =
         '<span class="streak-fire">🔥</span>' +
-        '<span><span class="streak-num">' + streak + '</span> day' + (streak > 1 ? 's' : '') + ' in a row!</span>';
+        '<span><span class="streak-num">' + streak + '</span>' + streakWord + '</span>';
     } else {
       container.classList.add('hidden');
     }
@@ -142,9 +157,9 @@ var Render = (function () {
      ────────────────────────────────────────────────── */
   function renderTip(container, age) {
     var tips = ROUTINES.TIPS[age] || ROUTINES.TIPS[5];
-    // Pick a "random" tip based on the day (stable for the day)
     var dayIndex = new Date().getDate() % tips.length;
-    container.innerHTML = '<span class="tip-icon">💡</span> ' + tips[dayIndex];
+    var tipText = I18n.tip(age, dayIndex, tips[dayIndex]);
+    container.innerHTML = '<span class="tip-icon">💡</span> ' + tipText;
   }
 
   /* ──────────────────────────────────────────────────
@@ -153,9 +168,9 @@ var Render = (function () {
   function renderGreeting(greetingEl, profile) {
     var h = new Date().getHours();
     var name = profile ? profile.name : 'superstar';
-    if (h < 12)      greetingEl.textContent = 'Good morning, ' + name + '!';
-    else if (h < 17) greetingEl.textContent = 'Good afternoon, ' + name + '!';
-    else             greetingEl.textContent = 'Good evening, ' + name + '!';
+    if (h < 12)      greetingEl.textContent = I18n.t('greet.morning') + name + '!';
+    else if (h < 17) greetingEl.textContent = I18n.t('greet.afternoon') + name + '!';
+    else             greetingEl.textContent = I18n.t('greet.evening') + name + '!';
   }
 
   /* ──────────────────────────────────────────────────
@@ -185,13 +200,14 @@ var Render = (function () {
     var countEl = document.getElementById('progress-count');
     if (countEl) countEl.textContent = done + ' / ' + total;
 
-    // Motivational text
+    // Motivational text (translated)
     var textEl = document.getElementById('progress-text');
     if (textEl) {
+      var motKeys = ['mot.start', 'mot.going', 'mot.awesome', 'mot.halfway', 'mot.almost', 'mot.done'];
       var msg = '';
       for (var i = 0; i < ROUTINES.MOTIVATIONS.length; i++) {
         var m = ROUTINES.MOTIVATIONS[i];
-        if (pct <= m.max) { msg = m.text; break; }
+        if (pct <= m.max) { msg = I18n.t(motKeys[i]); break; }
       }
       textEl.textContent = msg;
     }
@@ -201,6 +217,7 @@ var Render = (function () {
     if (celebEl) {
       if (done === total && total > 0) {
         celebEl.classList.add('show');
+        celebEl.querySelector('.msg').textContent = I18n.t('celeb.msg');
       } else {
         celebEl.classList.remove('show');
       }
@@ -251,13 +268,14 @@ var Render = (function () {
         timerLabel = '<span class="task-timer-label">⏱ ' + Effects.formatTime(task.timer) + '</span>';
       }
 
+      var displayText = taskText(profile.age, task);
+
       card.innerHTML =
         '<span class="task-emoji">' + task.emoji + '</span>' +
-        '<span class="task-text">' + task.text + timerLabel + '</span>' +
+        '<span class="task-text">' + displayText + timerLabel + '</span>' +
         '<span class="task-check"></span>';
 
       function handleToggle() {
-        // If the task has a timer and is being checked, open the timer
         if (!isDone && task.timer && onTimer) {
           onTimer(task, card);
         } else {
@@ -286,8 +304,8 @@ var Render = (function () {
 
     var header = el('div', 'stickers-header');
     header.innerHTML =
-      '<h2>' + profile.avatar + ' ' + profile.name + '\'s Stickers</h2>' +
-      '<p>Earn stickers by completing routines!</p>';
+      '<h2>' + ROUTINES.avatarHTML(profile.avatar, 30) + ' ' + profile.name + I18n.t('stickers.title') + '</h2>' +
+      '<p>' + I18n.t('stickers.earn') + '</p>';
     container.appendChild(header);
 
     // Stats
@@ -298,10 +316,10 @@ var Render = (function () {
     var allDayCount = stickers.filter(function (s) { return s.type === 'allDay'; }).length;
 
     stats.innerHTML =
-      '<div class="sticker-stat"><div class="stat-num">' + morningCount + '</div><div class="stat-label">🌅 Morning</div></div>' +
-      '<div class="sticker-stat"><div class="stat-num">' + afternoonCount + '</div><div class="stat-label">☀️ Afternoon</div></div>' +
-      '<div class="sticker-stat"><div class="stat-num">' + eveningCount + '</div><div class="stat-label">🌙 Evening</div></div>' +
-      '<div class="sticker-stat"><div class="stat-num">' + allDayCount + '</div><div class="stat-label">🏆 Full Day</div></div>';
+      '<div class="sticker-stat"><div class="stat-num">' + morningCount + '</div><div class="stat-label">🌅 ' + I18n.t('stickers.morning') + '</div></div>' +
+      '<div class="sticker-stat"><div class="stat-num">' + afternoonCount + '</div><div class="stat-label">☀️ ' + I18n.t('stickers.afternoon') + '</div></div>' +
+      '<div class="sticker-stat"><div class="stat-num">' + eveningCount + '</div><div class="stat-label">🌙 ' + I18n.t('stickers.evening') + '</div></div>' +
+      '<div class="sticker-stat"><div class="stat-num">' + allDayCount + '</div><div class="stat-label">🏆 ' + I18n.t('stickers.fullDay') + '</div></div>';
     container.appendChild(stats);
 
     // Grid of stickers
@@ -328,16 +346,17 @@ var Render = (function () {
     var allTasks = Store.getAllEffectiveTasks(profile.id, profile.age);
     var week = Store.getWeekData(profile.id, allTasks);
     var streak = Store.getStreak(profile.id, allTasks);
+    var dayNamesList = I18n.dayNames();
 
     var header = el('div', 'weekly-header');
     header.innerHTML =
-      '<h2>📅 This Week</h2>' +
-      '<p>' + profile.name + '\'s weekly progress</p>';
+      '<h2>📅 ' + I18n.t('weekly.title') + '</h2>' +
+      '<p>' + profile.name + I18n.t('weekly.sub') + '</p>';
     container.appendChild(header);
 
     // Week grid
     var grid = el('div', 'week-grid');
-    week.forEach(function (day) {
+    week.forEach(function (day, idx) {
       var dayEl = el('div', 'week-day' + (day.isToday ? ' today' : '') + (day.isFuture ? ' future' : ''));
       var emojiForDay = '';
       if (!day.isFuture) {
@@ -347,13 +366,12 @@ var Render = (function () {
         else emojiForDay = '·';
       }
 
-      // Small progress ring per day
       var smallCircum = 2 * Math.PI * 13;
       var smallOffset = smallCircum * (1 - day.pct);
       var ringColor = day.pct >= 1 ? '#6BCB77' : day.pct >= 0.5 ? '#FFD93D' : day.pct > 0 ? '#FFB347' : '#EDE9FE';
 
       dayEl.innerHTML =
-        '<div class="day-name">' + day.dayName + '</div>' +
+        '<div class="day-name">' + dayNamesList[idx] + '</div>' +
         '<div class="day-num">' + day.dayNum + '</div>' +
         '<svg class="day-ring" viewBox="0 0 32 32">' +
           '<circle cx="16" cy="16" r="13" fill="none" stroke="#EDE9FE" stroke-width="3"/>' +
@@ -379,11 +397,11 @@ var Render = (function () {
     var weekPct = totalWeekTasks ? Math.round((totalWeekDone / totalWeekTasks) * 100) : 0;
 
     summary.innerHTML =
-      '<h3>Weekly Summary</h3>' +
-      '<div class="summary-row"><span class="label">Tasks completed</span><span class="value">' + totalWeekDone + ' / ' + totalWeekTasks + '</span></div>' +
-      '<div class="summary-row"><span class="label">Completion rate</span><span class="value">' + weekPct + '%</span></div>' +
-      '<div class="summary-row"><span class="label">Perfect days</span><span class="value">' + perfectDays + ' ⭐</span></div>' +
-      '<div class="summary-row"><span class="label">Current streak</span><span class="value">' + streak + ' 🔥</span></div>';
+      '<h3>' + I18n.t('weekly.summary') + '</h3>' +
+      '<div class="summary-row"><span class="label">' + I18n.t('weekly.tasks') + '</span><span class="value">' + totalWeekDone + ' / ' + totalWeekTasks + '</span></div>' +
+      '<div class="summary-row"><span class="label">' + I18n.t('weekly.rate') + '</span><span class="value">' + weekPct + '%</span></div>' +
+      '<div class="summary-row"><span class="label">' + I18n.t('weekly.perfect') + '</span><span class="value">' + perfectDays + ' ⭐</span></div>' +
+      '<div class="summary-row"><span class="label">' + I18n.t('weekly.streak') + '</span><span class="value">' + streak + ' 🔥</span></div>';
     container.appendChild(summary);
   }
 
@@ -394,34 +412,35 @@ var Render = (function () {
     container.innerHTML = '';
 
     var header = el('div', 'settings-header');
-    header.innerHTML = '<h2>⚙️ Settings</h2>';
+    header.innerHTML = '<h2>⚙️ ' + I18n.t('settings.title') + '</h2>';
     container.appendChild(header);
 
     // Current profile card
     if (profile) {
       var pe = el('div', 'profile-editor');
+      var ageDisplay = profile.age === 'adult'
+        ? ageLabel('adult')
+        : 'Age ' + profile.age + ' · ' + ageLabel(profile.age);
       pe.innerHTML =
         '<div class="profile-editor-header">' +
-          '<span class="pe-avatar">' + profile.avatar + '</span>' +
+          '<span class="pe-avatar">' + ROUTINES.avatarHTML(profile.avatar, 44) + '</span>' +
           '<div class="pe-info">' +
             '<div class="pe-name">' + profile.name + '</div>' +
-            '<div class="pe-age">Age ' + profile.age + ' · ' + ROUTINES.AGE_LABELS[profile.age] + '</div>' +
+            '<div class="pe-age">' + ageDisplay + '</div>' +
           '</div>' +
         '</div>';
 
-      // Edit profile button
-      var editBtn = el('button', 'btn-secondary', '✏️ Edit Profile');
+      var editBtn = el('button', 'btn-secondary', '✏️ ' + I18n.t('settings.editProfile'));
       editBtn.style.width = '100%';
       editBtn.style.marginBottom = '8px';
       editBtn.addEventListener('click', function () { callbacks.onEditProfile(); });
       pe.appendChild(editBtn);
 
-      // Delete profile (only if more than 1)
       if (Store.getProfiles().length > 1) {
-        var delBtn = el('button', 'btn-danger', '🗑️ Remove Profile');
+        var delBtn = el('button', 'btn-danger', '🗑️ ' + I18n.t('settings.removeProfile'));
         delBtn.style.width = '100%';
         delBtn.addEventListener('click', function () {
-          if (confirm('Remove ' + profile.name + '\'s profile? This cannot be undone.')) {
+          if (confirm(I18n.t('confirm.removePre') + profile.name + I18n.t('confirm.remove'))) {
             callbacks.onDeleteProfile(profile.id);
           }
         });
@@ -430,9 +449,26 @@ var Render = (function () {
       container.appendChild(pe);
     }
 
+    // Language picker
+    var langGroup = el('div', 'settings-group');
+    langGroup.innerHTML = '<div class="settings-group-title">' + I18n.t('settings.language') + '</div>';
+    var langPicker = el('div', 'lang-picker');
+    var currentLang = I18n.getLang();
+
+    I18n.LANGUAGES.forEach(function (lang) {
+      var opt = el('button', 'lang-option' + (lang.code === currentLang ? ' selected' : ''));
+      opt.innerHTML = '<span class="lang-flag">' + lang.flag + '</span><span class="lang-name">' + I18n.t('lang.' + lang.code) + '</span>';
+      opt.addEventListener('click', function () {
+        callbacks.onLanguageChange(lang.code);
+      });
+      langPicker.appendChild(opt);
+    });
+    langGroup.appendChild(langPicker);
+    container.appendChild(langGroup);
+
     // Theme picker
     var themeGroup = el('div', 'settings-group');
-    themeGroup.innerHTML = '<div class="settings-group-title">Theme</div>';
+    themeGroup.innerHTML = '<div class="settings-group-title">' + I18n.t('settings.theme') + '</div>';
     var themePicker = el('div', 'theme-picker');
     var currentTheme = Store.getTheme();
 
@@ -452,7 +488,7 @@ var Render = (function () {
     // Custom tasks
     if (profile) {
       var customGroup = el('div', 'settings-group');
-      customGroup.innerHTML = '<div class="settings-group-title">Custom Tasks</div>';
+      customGroup.innerHTML = '<div class="settings-group-title">' + I18n.t('settings.customTasks') + '</div>';
       var editor = el('div', 'custom-tasks-editor');
       renderCustomTasksEditor(editor, profile, callbacks);
       customGroup.appendChild(editor);
@@ -461,16 +497,16 @@ var Render = (function () {
 
     // Danger zone
     var dangerGroup = el('div', 'settings-group');
-    dangerGroup.innerHTML = '<div class="settings-group-title">Data</div>';
+    dangerGroup.innerHTML = '<div class="settings-group-title">' + I18n.t('settings.data') + '</div>';
     var dangerCard = el('div', 'settings-card');
 
     var resetRow = el('div', 'settings-row');
     resetRow.innerHTML =
       '<span class="row-icon">🔄</span>' +
-      '<span class="row-text">Reset today\'s progress</span>' +
+      '<span class="row-text">' + I18n.t('settings.resetDay') + '</span>' +
       '<span class="row-arrow">›</span>';
     resetRow.addEventListener('click', function () {
-      if (confirm('Reset all tasks for today?')) {
+      if (confirm(I18n.t('confirm.resetDay'))) {
         callbacks.onResetDay();
       }
     });
@@ -479,10 +515,10 @@ var Render = (function () {
     var clearRow = el('div', 'settings-row');
     clearRow.innerHTML =
       '<span class="row-icon">⚠️</span>' +
-      '<span class="row-text">Clear all data</span>' +
+      '<span class="row-text">' + I18n.t('settings.clearAll') + '</span>' +
       '<span class="row-arrow">›</span>';
     clearRow.addEventListener('click', function () {
-      if (confirm('Delete ALL profiles and data? This cannot be undone.')) {
+      if (confirm(I18n.t('confirm.clearAll'))) {
         callbacks.onResetAll();
       }
     });
@@ -497,9 +533,9 @@ var Render = (function () {
     container.innerHTML = '';
     var custom = Store.getCustomTasks(profile.id);
     var sections = [
-      { key: 'morning',   label: '🌅 Morning',   emoji: '⭐' },
-      { key: 'afternoon', label: '☀️ Afternoon', emoji: '🎨' },
-      { key: 'evening',   label: '🌙 Evening',   emoji: '🌟' },
+      { key: 'morning',   label: '🌅 ' + I18n.t('tab.morning'),   emoji: '⭐' },
+      { key: 'afternoon', label: '☀️ ' + I18n.t('tab.afternoon'), emoji: '🎨' },
+      { key: 'evening',   label: '🌙 ' + I18n.t('tab.evening'),   emoji: '🌟' },
     ];
 
     sections.forEach(function (sec) {
@@ -522,13 +558,12 @@ var Render = (function () {
         secDiv.appendChild(item);
       });
 
-      // Add new task row
       var addRow = el('div', 'add-task-row');
       var input = document.createElement('input');
       input.type = 'text';
-      input.placeholder = 'Add a ' + sec.key + ' task…';
+      input.placeholder = I18n.t('settings.addTask') + ' ' + I18n.t('tab.' + sec.key).toLowerCase() + '…';
       input.maxLength = 40;
-      var addBtn = el('button', '', '+ Add');
+      var addBtn = el('button', '', I18n.t('settings.addBtn'));
       addBtn.addEventListener('click', function () {
         var text = input.value.trim();
         if (text) {
@@ -556,17 +591,20 @@ var Render = (function () {
     overlay.innerHTML = '';
     overlay.classList.add('active');
 
+    var profile = Store.getActiveProfile();
+    var displayText = profile ? taskText(profile.age, task) : task.text;
+
     var box = el('div', 'timer-box');
     box.innerHTML =
       '<div class="timer-emoji">' + task.emoji + '</div>' +
-      '<div class="timer-task">' + task.text + '</div>' +
+      '<div class="timer-task">' + displayText + '</div>' +
       '<div class="timer-display" id="timer-display">' + Effects.formatTime(task.timer) + '</div>' +
-      '<div class="timer-label">Timer</div>' +
+      '<div class="timer-label">' + I18n.t('timer.label') + '</div>' +
       '<div class="timer-actions">' +
-        '<button class="timer-start-btn" id="timer-start">▶ Start</button>' +
-        '<button class="timer-skip-btn" id="timer-skip">Skip</button>' +
+        '<button class="timer-start-btn" id="timer-start">▶ ' + I18n.t('timer.start') + '</button>' +
+        '<button class="timer-skip-btn" id="timer-skip">' + I18n.t('timer.skip') + '</button>' +
       '</div>' +
-      '<div class="timer-done-msg" id="timer-done-msg" style="display:none">Done! Great job! ✅</div>';
+      '<div class="timer-done-msg" id="timer-done-msg" style="display:none">' + I18n.t('timer.done') + ' ✅</div>';
 
     overlay.appendChild(box);
 
@@ -587,7 +625,7 @@ var Render = (function () {
         },
         function () {
           doneMsg.style.display = '';
-          skipBtn.textContent = 'Done!';
+          skipBtn.textContent = I18n.t('timer.doneBtn');
           skipBtn.className = 'timer-start-btn';
           skipBtn.onclick = function () {
             overlay.classList.remove('active');
@@ -613,46 +651,49 @@ var Render = (function () {
 
     var sheet = el('div', 'modal-sheet');
     sheet.innerHTML =
-      '<h3>Edit Profile</h3>' +
+      '<h3>' + I18n.t('edit.title') + '</h3>' +
       '<div class="setup-section">' +
-        '<label>Name</label>' +
+        '<label>' + I18n.t('edit.name') + '</label>' +
         '<input class="setup-input" id="edit-name" type="text" value="' + profile.name + '" maxlength="20">' +
       '</div>' +
       '<div class="setup-section">' +
-        '<label>Age</label>' +
+        '<label>' + I18n.t('edit.age') + '</label>' +
         '<div class="age-picker" id="edit-age"></div>' +
       '</div>' +
       '<div class="setup-section">' +
-        '<label>Avatar</label>' +
+        '<label>' + I18n.t('edit.avatar') + '</label>' +
         '<div class="avatar-picker" id="edit-avatar"></div>' +
       '</div>' +
       '<div style="display:flex;gap:10px;margin-top:20px">' +
-        '<button class="btn-secondary modal-close" id="edit-cancel">Cancel</button>' +
-        '<button class="btn-primary" id="edit-save" style="flex:1">Save</button>' +
+        '<button class="btn-secondary modal-close" id="edit-cancel">' + I18n.t('edit.cancel') + '</button>' +
+        '<button class="btn-primary" id="edit-save" style="flex:1">' + I18n.t('edit.save') + '</button>' +
       '</div>';
     overlay.appendChild(sheet);
 
     // Age
     var agePicker = document.getElementById('edit-age');
     var selectedAge = profile.age;
-    for (var a = 1; a <= 5; a++) {
-      (function (age) {
-        var btn = el('button', 'age-option' + (age === selectedAge ? ' selected' : ''));
-        btn.innerHTML = '<span class="age-num">' + age + '</span><span class="age-label">' + ROUTINES.AGE_LABELS[age] + '</span>';
-        btn.addEventListener('click', function () {
-          agePicker.querySelectorAll('.age-option').forEach(function (b) { b.classList.remove('selected'); });
-          btn.classList.add('selected');
-          selectedAge = age;
-        });
-        agePicker.appendChild(btn);
-      })(a);
-    }
+    var ages = [1, 2, 3, 4, 5, 'adult'];
+
+    ages.forEach(function (age) {
+      var btn = el('button', 'age-option' + (age === selectedAge ? ' selected' : '') + (age === 'adult' ? ' age-option-adult' : ''));
+      var numDisplay = age === 'adult' ? '👤' : age;
+      btn.innerHTML = '<span class="age-num">' + numDisplay + '</span><span class="age-label">' + ageLabel(age) + '</span>';
+      btn.addEventListener('click', function () {
+        agePicker.querySelectorAll('.age-option').forEach(function (b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+        selectedAge = age;
+      });
+      agePicker.appendChild(btn);
+    });
 
     // Avatar
     var avatarPicker = document.getElementById('edit-avatar');
     var selectedAvatar = profile.avatar;
     ROUTINES.AVATARS.forEach(function (av) {
-      var btn = el('button', 'avatar-option' + (av === selectedAvatar ? ' selected' : ''), av);
+      var btn = el('button', 'avatar-option' + (av === selectedAvatar ? ' selected' : ''));
+      btn.innerHTML = ROUTINES.avatarPickerHTML(av);
+      btn.dataset.avatar = av;
       btn.addEventListener('click', function () {
         avatarPicker.querySelectorAll('.avatar-option').forEach(function (b) { b.classList.remove('selected'); });
         btn.classList.add('selected');
@@ -675,6 +716,38 @@ var Render = (function () {
     });
   }
 
+  /* ── Update static nav labels with translations ── */
+  function updateNavLabels() {
+    var navMap = {
+      routine: 'nav.home',
+      stickers: 'nav.stickers',
+      weekly: 'nav.week',
+      settings: 'nav.settings',
+    };
+    document.querySelectorAll('.nav-btn').forEach(function (btn) {
+      var view = btn.dataset.view;
+      var label = btn.querySelector('.nav-label');
+      if (label && navMap[view]) {
+        label.textContent = I18n.t(navMap[view]);
+      }
+    });
+  }
+
+  /* ── Update tab labels with translations ────────── */
+  function updateTabLabels() {
+    var tabMap = { morning: 'tab.morning', afternoon: 'tab.afternoon', evening: 'tab.evening' };
+    document.querySelectorAll('.tab-btn').forEach(function (btn) {
+      var tab = btn.dataset.tab;
+      if (tabMap[tab]) {
+        var emoji = tab === 'morning' ? '🌅 ' : tab === 'afternoon' ? '☀️ ' : '🌙 ';
+        // Preserve any badge that exists
+        var badge = btn.querySelector('.tab-badge');
+        btn.textContent = emoji + I18n.t(tabMap[tab]);
+        if (badge) btn.appendChild(badge);
+      }
+    });
+  }
+
   /* ── Public API ─────────────────────────────────── */
   return {
     renderWelcome: renderWelcome,
@@ -690,6 +763,8 @@ var Render = (function () {
     renderSettings: renderSettings,
     renderTimerOverlay: renderTimerOverlay,
     renderEditProfile: renderEditProfile,
+    updateNavLabels: updateNavLabels,
+    updateTabLabels: updateTabLabels,
     CIRCUMFERENCE: CIRCUMFERENCE,
   };
 })();
