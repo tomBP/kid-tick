@@ -111,24 +111,25 @@
 <nav class="bottom-nav">
   <button class="nav-btn active" data-view="routine">
     <span class="nav-icon">🏠</span>
-    <span>Home</span>
+    <span class="nav-text">Home</span>
   </button>
   <button class="nav-btn" data-view="stickers">
     <span class="nav-icon">⭐</span>
-    <span>Stickers</span>
+    <span class="nav-text">Stickers</span>
   </button>
   <button class="nav-btn" data-view="weekly">
     <span class="nav-icon">📅</span>
-    <span>Week</span>
+    <span class="nav-text">Week</span>
   </button>
   <button class="nav-btn" data-view="settings">
     <span class="nav-icon">⚙️</span>
-    <span>Settings</span>
+    <span class="nav-text">Settings</span>
   </button>
 </nav>
 
-<!-- Scripts (order matters: data → store → effects → render → app) -->
+<!-- Scripts (order matters: data → i18n → store → effects → render → app) -->
 <script src="js/routines.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/store.js"></script>
 <script src="js/effects.js"></script>
 <script src="js/render.js"></script>
